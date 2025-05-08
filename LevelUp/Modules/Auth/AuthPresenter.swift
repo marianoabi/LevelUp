@@ -47,7 +47,7 @@ extension AuthPresenter: AuthPresenterProtocol {
         }
 
         view?.showLoading()
-//        interactor
+        interactor.login(username: username, password: password)
     }
     
     func registerButtonTapped() {
