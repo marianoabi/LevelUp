@@ -55,7 +55,7 @@ final class NetworkService: NetworkServiceProtocol {
         self.session = session
     }
     
-    func request<T>(endpoint: Endpoint, completion: @escaping (Result<T, any Error>) -> Void) where T : Decodable {
+    func request<T: Decodable>(endpoint: Endpoint, completion: @escaping (Result<T, Error>) -> Void) {
         guard let url = buildURL(for: endpoint) else {
             completion(.failure(NetworkError.invalidURL))
             return
@@ -64,16 +64,19 @@ final class NetworkService: NetworkServiceProtocol {
         var request = URLRequest(url: url)
         request.httpMethod = endpoint.method
         
+        // Add authorization if needed
         if let token = UserDefaults.standard.string(forKey: "authToken") {
             request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
+        // Add body for non-GET requests
         if endpoint.method != "GET", let params = endpoint.parameters {
             do {
                 request.httpBody = try JSONSerialization.data(withJSONObject: params)
                 request.addValue("application/json", forHTTPHeaderField: "Content-Type")
             } catch {
                 completion(.failure(NetworkError.invalidParameters))
+                return
             }
         }
         
@@ -115,7 +118,7 @@ final class NetworkService: NetworkServiceProtocol {
         task.resume()
     }
     
-    func upload(data: Data, endpoint: Endpoint, completion: @escaping (Result<Void, any Error>) -> Void) {
+    func upload(data: Data, endpoint: Endpoint, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let url = buildURL(for: endpoint) else {
             completion(.failure(NetworkError.invalidURL))
             return
