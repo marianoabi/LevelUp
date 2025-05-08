@@ -13,11 +13,10 @@ final class AppCoordinator {
     private let navigationController: UINavigationController
     private var authCoordinator: AuthCoordinator?
     
-    init(window: UIWindow, dependencies: AppDependencies, navigationController: UINavigationController, authCoordinator: AuthCoordinator? = nil) {
+    init(window: UIWindow, dependencies: AppDependencies) {
         self.window = window
         self.dependencies = dependencies
-        self.navigationController = navigationController
-        self.authCoordinator = authCoordinator
+        self.navigationController = UINavigationController()
     }
     
     func start() {
@@ -25,10 +24,17 @@ final class AppCoordinator {
         window.makeKeyAndVisible()
         
         // show auth or main
-        showAuthFlow()
+        if dependencies.authService.isAuthenticated {
+            // Main
+        } else {
+            showAuthFlow()
+        }
     }
     
     private func showAuthFlow() {
-        
+        authCoordinator = AuthCoordinator(navigationController: navigationController, dependencies: dependencies, completion: { [weak self] in
+            self?.showAuthFlow()
+        })
+        authCoordinator?.start()
     }
 }
